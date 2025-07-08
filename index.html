@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Matrix Hero Page</title>
+  <link rel="shortcut icon" href="/images/logo.png" type="image/x-icon">
   <link href="https://fonts.googleapis.com/css2?family=Major+Mono+Display&display=swap" rel="stylesheet">
   <style>
     body, html {
@@ -24,12 +25,16 @@
 
     .hero {
       height: 100vh;
+      display: block;
+      margin-left: auto;
+      margin-right: auto;
+      width: 40%;
       display: flex;
       flex-direction: column;
       justify-content: center;
       align-items: center;
       text-align: center;
-      backdrop-filter: blur(3px);
+      backdrop-filter: blur(1px);
     }
 
     .hero h1 {
@@ -59,7 +64,7 @@
 
   <div class="hero">
     <h1>DECODE.ME</h1>
-    <a href="level1.html">Enter</a>
+    <a id="enter-link" href="#">Enter</a>
   </div>
 
   <script>
@@ -69,7 +74,7 @@
     canvas.height = window.innerHeight;
     canvas.width = window.innerWidth;
 
-    const letters = "アァイィウヴエエオカガキギクグケゲコゴサザシジスズセゼソゾタチッヂツヅテデトドナニヌネノハバパヒビピフブプヘベペホボポマミムメモヤユヨラリルレロワヲンABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    const letters = "⪘⬡⠏⿱⦟⸐⡺⚯⇺␫≾▷✕⅃⍲ⅉ⟟⇄⬗⻁⎐⢜∧≇∪⩪↡⁏⣘ⰱ≀⠤⸓∠⊉⻳Ⓩ⳹⡄⡐♃Ⅱ⹎⤯⎯⁐⑖❡ⱶ☠⁪⺲ⶲ≋⦥⚩⾉⊢⭠ⲡ⩙ⲁ₟♟⠻❽⇕⹣⩸⎟‌⅞⇾⽻≫ⵔ⫅⌟⶜ⵓⓩ⣿ⵃⓊ⌊⫓⹃⥌⪭ⰺⁿ⟋⌀✈⃡ⱄ⌫⠮アァイィウヴエエオカガキギクグケゲコゴサザシジスズセゼソゾタチッヂツヅテデトドナニヌネノハバパヒビピフブプヘベペホボポマミムメモヤユヨラリルレロワヲンABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
     const fontSize = 16;
     const columns = canvas.width / fontSize;
 
@@ -99,6 +104,14 @@
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
     });
+
+    // Set dynamic link depending on environment
+    const link = document.getElementById("enter-link");
+    if (location.hostname === "localhost" || location.hostname === "127.0.0.1") {
+      link.href = "level1.html";
+    } else {
+      link.href = "/level1";
+    }
   </script>
 </body>
 </html>
