@@ -20,15 +20,43 @@
       background-color: #000;
     }
 
+    /* Flashbang animation */
+    .flashbang {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: white;
+      z-index: 9999;
+      animation: flashbang 0.8s ease-out forwards;
+    }
+
+    @keyframes flashbang {
+      0% {
+        opacity: 1;
+        transform: scale(1);
+      }
+      50% {
+        opacity: 0.8;
+        transform: scale(1.1);
+      }
+      100% {
+        opacity: 0;
+        transform: scale(1);
+        visibility: hidden;
+      }
+    }
+
     .container {
       display: flex;
       height: 100vh;
     }
 
     .left {
-        flex: 1;
-        background: url("images/lvl2.png") no-repeat center center;
-        background-size: cover;
+      flex: 1;
+      background: url("images/lvl2.png") no-repeat center center;
+      background-size: cover;
     }
 
     .right {
@@ -79,38 +107,44 @@
     document.oncontextmenu = () => false;
     document.onkeydown = (e) => {
       if (
-        e.key === "F12" ||
-        (e.ctrlKey && e.shiftKey && ['I', 'J', 'C'].includes(e.key.toUpperCase())) ||
-        (e.ctrlKey && e.key.toLowerCase() === 'u')
+              e.key === "F12" ||
+              (e.ctrlKey && e.shiftKey && ['I', 'J', 'C'].includes(e.key.toUpperCase())) ||
+              (e.ctrlKey && e.key.toLowerCase() === 'u')
       ) {
         e.preventDefault();
+        e.stopPropagation();
         return false;
       }
     };
   </script>
 </head>
 <body>
-  <div class="container">
-    <div class="left"></div>
-    <div class="right">
-      <h1>Enter Password</h1>
-      <h2>m/sjfYw5+QEFub7hDHiTYg==</h2>
-      <i style="margin-bottom: 20px;">Hint: AES256</i>
-      <input type="password" id="pass" placeholder="Password" />
-      <button onclick="checkPassword()">Enter</button>
-    </div>
+<div class="flashbang"></div>
+<div class="container">
+  <div class="left"></div>
+  <div class="right">
+    <h1>Enter Password</h1>
+    <h2>m/sjfYw5+QEFub7hDHiTYg==</h2>
+    <i style="margin-bottom: 20px;">Hint: AES256</i>
+    <label for="pass" style="display: none">enter pwd</label> <!-- Label is hidden for accessibility, but not visible to users -->
+    <input type="password" id="pass" placeholder="Password" />
+    <button onclick="checkPassword()">Enter</button>
   </div>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 
-    <script>
+<script>
   function checkPassword() {
     const input = document.getElementById("pass").value;
     const inputHash = CryptoJS.SHA512(input).toString(CryptoJS.enc.Hex);
     console.log(inputHash, input)
     const correct = "34c6d3a69a967b8c120aba6caa1ac61814c72dc70145e67119bf5365a7e80d294cba34e0da583724e915d195d0052d39b1d16459592b848a170a4949353553d2";
     if (inputHash == correct) {
-      window.location.href = "level3.html";
-    } else {
+      if (location.hostname === "localhost" || location.hostname === "127.0.0.1") {
+        window.location.href = "level3.html";
+      } else {
+        window.location.href = "level3.html";
+      }    } else {
       alert("Incorrect password. Try again.");
     }
   }

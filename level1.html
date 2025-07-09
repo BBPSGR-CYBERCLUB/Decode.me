@@ -19,15 +19,43 @@
       background-color: #000;
     }
 
+    /* Flashbang animation */
+    .flashbang {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: white;
+      z-index: 9999;
+      animation: flashbang 0.8s ease-out forwards;
+    }
+
+    @keyframes flashbang {
+      0% {
+        opacity: 1;
+        transform: scale(1);
+      }
+      50% {
+        opacity: 0.8;
+        transform: scale(1.1);
+      }
+      100% {
+        opacity: 0;
+        transform: scale(1);
+        visibility: hidden;
+      }
+    }
+
     .container {
       display: flex;
       height: 100vh;
     }
 
     .left {
-        flex: 1;
-        background: url("images/lvl1.png") no-repeat center center;
-        background-size: cover;
+      flex: 1;
+      background: url("images/lvl1.png") no-repeat center center;
+      background-size: cover;
     }
 
     .right {
@@ -78,9 +106,9 @@
     document.oncontextmenu = () => false;
     document.onkeydown = (e) => {
       if (
-        e.key === "F12" ||
-        (e.ctrlKey && e.shiftKey && ['I', 'J', 'C'].includes(e.key.toUpperCase())) ||
-        (e.ctrlKey && e.key.toLowerCase() === 'u')
+              e.key === "F12" ||
+              (e.ctrlKey && e.shiftKey && ['I', 'J', 'C'].includes(e.key.toUpperCase())) ||
+              (e.ctrlKey && e.key.toLowerCase() === 'u')
       ) {
         e.preventDefault();
         return false;
@@ -89,24 +117,30 @@
   </script>
 </head>
 <body>
-  <div class="container">
-    <div class="left"></div>
-    <div class="right">
-      <h1>Enter Access Code</h1>
-      <input type="password" id="pass" placeholder="Password" />
-      <button onclick="checkPassword()">Enter</button>
-    </div>
+<div class="flashbang"></div>
+<div class="container">
+  <div class="left"></div>
+  <div class="right">
+    <h1>Enter Access Code</h1>
+    <label for="pass" style="display: none">enter pwd</label> <!-- Label is hidden for accessibility, but not visible to users -->
+    <input type="password" id="pass" placeholder="Password" />
+    <button onclick="checkPassword()">Enter</button>
   </div>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 
-    <script>
+<script>
   function checkPassword() {
     const input = document.getElementById("pass").value;
     const inputHash = CryptoJS.SHA512(input).toString(CryptoJS.enc.Hex);
     console.log(inputHash, input)
     const correct = "bab4c3b1170f51124fff260c4f34e27eb3ccb42c273791af9c975d19f9fd40920d0791e535d368b415a3d41eee4de0eea0a456e81c604391ff413029783c643e";
     if (inputHash == correct) {
-      window.location.href = "level2.html";
+      if (location.hostname === "localhost" || location.hostname === "127.0.0.1") {
+        window.location.href = "level2.html";
+      } else {
+        window.location.href = "level2.html";
+      }
     } else {
       alert("Incorrect password. Try again.");
     }

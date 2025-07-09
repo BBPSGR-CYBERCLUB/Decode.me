@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Network Error</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #000;
+            color: #0f0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            text-align: center;
+        }
+
+        .error-container {
+            max-width: 600px;
+            padding: 40px;
+        }
+
+        h1 {
+            font-size: 48px;
+            margin-bottom: 20px;
+            color: #ff0;
+        }
+
+        h2 {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: #0f0;
+        }
+
+        p {
+            font-size: 16px;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        .retry-button {
+            padding: 12px 24px;
+            background-color: #0f0;
+            color: #000;
+            border: none;
+            border-radius: 5px;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 10px;
+            transition: background-color 0.3s;
+        }
+
+        .retry-button:hover {
+            background-color: #6f6;
+        }
+
+        .connection-status {
+            margin-top: 20px;
+            font-size: 14px;
+            color: #888;
+        }
+
+        .pulse {
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+    </style>
+</head>
+<body>
+<div class="error-container">
+    <h1 class="pulse">⚠️</h1>
+    <h2>Network Error</h2>
+    <p>Unable to connect to the server. Please check your internet connection and try again.</p>
+
+    <button class="retry-button" onclick="window.location.reload()">Retry</button>
+    <button class="retry-button" onclick="window.history.back()">Go Back</button>
+
+    <div class="connection-status">
+        <p>Connection Status: <span id="status">Checking...</span></p>
+    </div>
+</div>
+
+<script>
+    // Check online status
+    function updateStatus() {
+        const statusElement = document.getElementById('status');
+        if (navigator.onLine) {
+            statusElement.textContent = 'Online';
+            statusElement.style.color = '#0f0';
+        } else {
+            statusElement.textContent = 'Offline';
+            statusElement.style.color = '#f00';
+        }
+    }
+
+    // Initial status check
+    updateStatus();
+
+    // Listen for online/offline events
+    window.addEventListener('online', updateStatus);
+    window.addEventListener('offline', updateStatus);
+
+    // Auto-retry when back online
+    window.addEventListener('online', () => {
+        setTimeout(() => {
+            window.location.reload();
+        }, 1000);
+    });
+</script>
+</body>
+</html>
