@@ -100,6 +100,10 @@
         button:hover {
             background-color: #6f6;
         }
+
+        .hidden{
+            display: none;
+        }
     </style>
     <link href="https://fonts.googleapis.com/css2?family=Major+Mono+Display&display=swap" rel="stylesheet">
     <script>
@@ -122,12 +126,11 @@
 <div class="container">
     <div class="left"></div>
     <div class="right">
-        <h1>Solve the riddle.</h1>
-        <audio src="level3/stego.wav" controls></audio>
-        <i style="margin-bottom: 20px;"><button onclick="download_decrypt_file()">hint</button></i>
-        <label for="pass" style="display: none">enter pwd</label> <!-- Label is hidden for accessibility, but not visible to users -->
-        <input type="password" id="pass" placeholder="Password" />
-        <button onclick="checkPassword()">Enter</button>
+        <h1>We are allowing you to go forward a level... click the button to continue</h1>
+        <button onclick="rickroll()">click here</button>\
+        <form class="hidden" onsubmit="checkPassword()">
+            <input type="text" name="pwd" id="pwd" autofocus>
+        </form>
     </div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
@@ -149,9 +152,15 @@
         }
     }
 
-    function download_decrypt_file(){
-        window.location.href = "level3/decrypt.py";
+    function rickroll(){
+        window.location.replace("https://tinyurl.com/fakelink1234")
     }
+    onload((e) => {
+        e.preventDefault();
+        alert("lvl-4 is todo... goig to home...")
+        window.location.href = "./"
+    })
+
 </script>
 </body>
 </html>

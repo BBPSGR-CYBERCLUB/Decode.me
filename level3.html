@@ -137,7 +137,7 @@
         const input = document.getElementById("pass").value;
         const inputHash = CryptoJS.SHA512(input).toString(CryptoJS.enc.Hex);
         console.log(inputHash, input)
-        const correct = "34c6d3a69a967b8c120aba6caa1ac61814c72dc70145e67119bf5365a7e80d294cba34e0da583724e915d195d0052d39b1d16459592b848a170a4949353553d2";
+        const correct = "b109f3bbbc244eb82441917ed06d618b9008dd09b3befd1b5e07394c706a8bb980b1d7785e5976ec049b46df5f1326af5a2ea6d103fd07c95385ffab0cacbc86";
         if (inputHash == correct) {
             if (location.hostname === "localhost" || location.hostname === "127.0.0.1") {
                 window.location.href = "level4.html";
