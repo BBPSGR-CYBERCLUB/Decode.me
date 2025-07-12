@@ -6,12 +6,13 @@
   <title>Decrypt.me</title>
   <link rel="shortcut icon" href="./images/logo.png" type="image/x-icon">
   <link href="https://fonts.googleapis.com/css2?family=Major+Mono+Display&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap" rel="stylesheet">
   <style>
     body, html {
       margin: 0;
       padding: 0;
       height: 100%;
-      font-family: Arial, sans-serif;
+      font-family: 'JetBrains Mono', sans-serif;
       overflow: hidden;
       color: white;
     }
@@ -53,7 +54,7 @@
       font-weight: bold;
       border-radius: 8px;
       transition: background 0.3s;
-      font-family: 'Major Mono Display', monospace;
+      font-family: 'JetBrains Mono', monospace;
       margin-bottom: 20px;
     }
 
@@ -68,9 +69,14 @@
   <div class="hero">
     <h1>DECODE.ME</h1>
     <a id="enter-link" href="#">Enter</a>
+    <a id="leaderboard-link" href="#" style="margin-top: 10px; background-color: rgba(255, 255, 255, 0.3);">Leaderboard</a>
   </div>
 
   <script>
+    // Firebase SDK
+    document.write('<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"><\/script>');
+    document.write('<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"><\/script>');
+    document.write('<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"><\/script>');
 
     // Register service worker
     if ('serviceWorker' in navigator) {
@@ -122,13 +128,46 @@
       canvas.height = window.innerHeight;
     });
 
-    // Set dynamic link depending on environment
-    const link = document.getElementById("enter-link");
-    if (location.hostname === "localhost" || location.hostname === "127.0.0.1") {
-      link.href = "level1.html";
-    } else {
-      link.href = "./level1";
-    }
+    // Firebase Configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyCnkMOrmlbXLrwrN4hlgfktij6gxhKXei8",
+      authDomain: "decode-me-4a832.firebaseapp.com",
+      projectId: "decode-me-4a832",
+      storageBucket: "decode-me-4a832.firebasestorage.app",
+      messagingSenderId: "1018708707971",
+      appId: "1:1018708707971:web:ce262b1e943194fba1a9b6"
+    };
+
+    // Initialize Firebase after scripts are loaded
+    window.onload = function() {
+      if (typeof firebase !== 'undefined') {
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+
+        // Set dynamic link depending on environment and auth state
+        const enterLink = document.getElementById("enter-link");
+        const leaderboardLink = document.getElementById("leaderboard-link");
+
+        // Set leaderboard link
+        leaderboardLink.href = "leaderboard.html";
+
+        // Check if user is already logged in
+        auth.onAuthStateChanged((user) => {
+          if (user) {
+            // User is logged in, redirect to level1
+            enterLink.href = "level1.html";
+          } else {
+            // User is not logged in, redirect to auth page
+            enterLink.href = "auth.html";
+          }
+        });
+      } else {
+        console.error("Firebase SDK not loaded properly");
+        // Fallback behavior if Firebase isn't loaded
+        const enterLink = document.getElementById("enter-link");
+        enterLink.href = "level1.html";
+      }
+    };
   </script>
 </body>
 </html>

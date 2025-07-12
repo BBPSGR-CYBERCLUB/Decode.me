@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Level 3 Access</title>
+    <link rel="shortcut icon" href="./images/logo.png" type="image/x-icon">
+    <style>
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%;
+            font-family: 'JetBrains Mono', sans-serif;
+            overflow: hidden;
+            background-color: #000;
+        }
+
+        /* Flashbang animation */
+        .flashbang {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: white;
+            z-index: 9999;
+            animation: flashbang 0.8s ease-out forwards;
+        }
+
+        @keyframes flashbang {
+            0% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 0.8;
+                transform: scale(1.1);
+            }
+            100% {
+                opacity: 0;
+                transform: scale(1);
+                visibility: hidden;
+            }
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+        }
+
+        .left {
+            flex: 1;
+            background: url("images/lvl2.png") no-repeat center center;
+            background-size: cover;
+        }
+
+        .right {
+            flex: 1;
+            background-color: #111;
+            color: #0f0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+        }
+
+        h1 {
+            font-family: 'Major Mono Display', monospace;
+            margin-bottom: 30px;
+            color: #0f0;
+        }
+
+        input[type="password"] {
+            padding: 10px;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            outline: none;
+            width: 200px;
+            text-align: center;
+        }
+
+        button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #0f0;
+            color: #000;
+            border: none;
+            border-radius: 5px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #6f6;
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Major+Mono+Display&display=swap" rel="stylesheet">
+    <script>
+        // Disable inspect tools
+        document.oncontextmenu = () => false;
+        document.onkeydown = (e) => {
+            if (
+                e.key === "F12" ||
+                (e.ctrlKey && e.shiftKey && ['I', 'J', 'C'].includes(e.key.toUpperCase())) ||
+                (e.ctrlKey && e.key.toLowerCase() === 'u')
+            ) {
+                e.preventDefault();
+                return false;
+            }
+        };
+    </script>
+</head>
+<body>
+<div class="flashbang"></div>
+<div class="container">
+    <div class="left"></div>
+    <div class="right">
+        <h1>Solve the riddle.</h1>
+        <audio src="level3/stego.wav" controls></audio>
+        <i style="margin-bottom: 20px;"><button onclick="download_decrypt_file()">hint</button></i>
+        <label for="pass" style="display: none">enter pwd</label> <!-- Label is hidden for accessibility, but not visible to users -->
+        <input type="password" id="pass" placeholder="Password" />
+        <button onclick="checkPassword()">Enter</button>
+    </div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<script>
+    // Firebase Configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyCnkMOrmlbXLrwrN4hlgfktij6gxhKXei8",
+      authDomain: "decode-me-4a832.firebaseapp.com",
+      projectId: "decode-me-4a832",
+      storageBucket: "decode-me-4a832.firebasestorage.app",
+      messagingSenderId: "1018708707971",
+      appId: "1:1018708707971:web:ce262b1e943194fba1a9b6"
+    };
+
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    // Check if user is authorized for this level
+    document.addEventListener('DOMContentLoaded', async () => {
+      auth.onAuthStateChanged(async (user) => {
+        if (user) {
+          try {
+            const teamDoc = await db.collection('teams').doc(user.uid).get();
+            if (teamDoc.exists) {
+              const teamData = teamDoc.data();
+              // Check if user has completed level 4
+              if (!teamData.levels || !teamData.levels.level4 || !teamData.levels.level4.completedAt) {
+                // User hasn't completed level 4, redirect to level 4
+                window.location.href = "level4.html";
+              } else {
+                // Record start time for level 5 if not already recorded
+                const levelRef = db.collection('teams').doc(user.uid);
+                await levelRef.update({
+                  'levels.level5.startedAt': firebase.firestore.FieldValue.serverTimestamp()
+                });
+              }
+            }
+          } catch (error) {
+            console.error('Error checking level authorization:', error);
+          }
+        } else {
+          // If not logged in, redirect to auth page
+          window.location.href = "auth.html";
+        }
+      });
+    });
+
+    function checkPassword() {
+        const input = document.getElementById("pass").value;
+        const inputHash = CryptoJS.SHA512(input).toString(CryptoJS.enc.Hex);
+        console.log(inputHash, input)
+        const correct = "0f54f8466e4f137ce5b733d52579551cb700859af62e10b9a1cc7ad1fc706a3d001c8f2669c36f8823d2881fddef5f09bb6e9a6678f53c4d59b193783e32a09a";
+        if (inputHash == correct) {
+            // Record level completion time
+            const user = auth.currentUser;
+            if (user) {
+              db.collection('teams').doc(user.uid).update({
+                'levels.level5.completedAt': firebase.firestore.FieldValue.serverTimestamp()
+              }).then(() => {
+                // Navigate to winner page
+                window.location.href = "winner.html";
+              }).catch(error => {
+                console.error('Error updating level completion time:', error);
+                // Navigate anyway in case of error
+                window.location.href = "winner.html";
+              });
+            } else {
+              // Navigate if not logged in
+              window.location.href = "winner.html";
+            }
+        } else {
+            alert("Incorrect password. Try again.");
+        }
+    }
+
+    function download_decrypt_file(){
+        window.location.href = "level3/decrypt.py";
+    }
+</script>
+</body>
+</html>

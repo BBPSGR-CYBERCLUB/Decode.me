@@ -4,7 +4,6 @@
   <meta charset="UTF-8" />
   <title>Level 1 Access</title>
   <link rel="shortcut icon" href="./images/logo.png" type="image/x-icon">
-
   <style>
     * {
       margin: 0;
@@ -14,7 +13,7 @@
 
     html, body {
       height: 100%;
-      font-family: Arial, sans-serif;
+      font-family: 'JetBrains Mono', sans-serif;
       overflow: hidden;
       background-color: #000;
     }
@@ -128,17 +127,73 @@
   </div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <script>
+  // Firebase Configuration
+  const firebaseConfig = {
+    apiKey: "AIzaSyCnkMOrmlbXLrwrN4hlgfktij6gxhKXei8",
+    authDomain: "decode-me-4a832.firebaseapp.com",
+    projectId: "decode-me-4a832",
+    storageBucket: "decode-me-4a832.firebasestorage.app",
+    messagingSenderId: "1018708707971",
+    appId: "1:1018708707971:web:ce262b1e943194fba1a9b6"
+  };
+
+  // Initialize Firebase
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.firestore();
+
+  // Record level start time when page loads
+  document.addEventListener('DOMContentLoaded', async () => {
+    auth.onAuthStateChanged(async (user) => {
+      if (user) {
+        try {
+          // Check if the user is authorized for this level
+          const teamDoc = await db.collection('teams').doc(user.uid).get();
+          if (teamDoc.exists) {
+            const teamData = teamDoc.data();
+            // Record start time if not already recorded
+            const levelRef = db.collection('teams').doc(user.uid);
+            await levelRef.update({
+              'levels.level1.startedAt': firebase.firestore.FieldValue.serverTimestamp()
+            });
+          }
+        } catch (error) {
+          console.error('Error updating level start time:', error);
+        }
+      } else {
+        // If not logged in, redirect to auth page
+        window.location.href = "auth.html";
+      }
+    });
+  });
+
   function checkPassword() {
     const input = document.getElementById("pass").value;
     const inputHash = CryptoJS.SHA512(input).toString(CryptoJS.enc.Hex);
     console.log(inputHash, input)
     const correct = "bab4c3b1170f51124fff260c4f34e27eb3ccb42c273791af9c975d19f9fd40920d0791e535d368b415a3d41eee4de0eea0a456e81c604391ff413029783c643e";
     if (inputHash == correct) {
-      if (location.hostname === "localhost" || location.hostname === "127.0.0.1") {
-        window.location.href = "level2.html";
+      // Record level completion time
+      const user = auth.currentUser;
+      if (user) {
+        db.collection('teams').doc(user.uid).update({
+          'levels.level1.completedAt': firebase.firestore.FieldValue.serverTimestamp()
+        }).then(() => {
+          // Navigate to next level
+          window.location.href = "level2.html";
+        }).catch(error => {
+          console.error('Error updating level completion time:', error);
+          // Navigate anyway in case of error
+          window.location.href = "level2.html";
+        });
       } else {
+        // Navigate if not logged in
         window.location.href = "level2.html";
       }
     } else {

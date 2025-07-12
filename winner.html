@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Decrypt.me</title>
+    <link rel="shortcut icon" href="./images/logo.png" type="image/x-icon">
+    <link href="https://fonts.googleapis.com/css2?family=Major+Mono+Display&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap" rel="stylesheet">
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+            color: white;
+        }
+
+        canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: -1;
+        }
+
+
+        .hero {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 40%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            border-radius: 10px;
+            backdrop-filter: blur(5px);
+        }
+
+        .hero h1 {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            font-family: 'Major Mono Display', monospace;
+        }
+
+        .hero h2 {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .hero a {
+            padding: 12px 24px;
+            background-color: rgba(0, 255, 0, 0.8);
+            color: black;
+            text-decoration: none;
+            font-weight: bold;
+            border-radius: 8px;
+            transition: background 0.3s;
+            font-family: 'Major Mono Display', monospace;
+            margin-bottom: 20px;
+        }
+
+        .hero a:hover {
+            background-color: lime;
+        }
+    </style>
+</head>
+<body>
+<canvas id="matrix"></canvas>
+
+<div class="hero">
+    <h1>DECODE.ME</h1>
+    <h2>YOU HAVE COMPLETED THE HUNT... CONGRATULATIONS</h2>
+    <div id="team-info" style="margin-top: 20px; font-family: 'JetBrains Mono', monospace;"></div>
+    <a id="leaderboard-link" href="#" style="margin-top: 30px; background-color: rgba(255, 255, 255, 0.3);">View Leaderboard</a>
+</div>
+
+<script>
+
+    // Register service worker
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/serviceworker.js')
+                .then(registration => {
+                    console.log('Service Worker registered:', registration);
+                })
+                .catch(error => {
+                    console.error('Service Worker registration failed:', error);
+                });
+        });
+    }
+
+    const canvas = document.getElementById("matrix");
+    const ctx = canvas.getContext("2d");
+
+    canvas.height = window.innerHeight;
+    canvas.width = window.innerWidth;
+
+    const letters = "⪘⬡⠏⿱⦟⸐⡺⚯⇺␫≾▷✕⅃⍲ⅉ⟟⇄⬗⻁⎐⢜∧≇∪⩪↡⁏⣘ⰱ≀⠤⸓∠⊉⻳Ⓩ⳹⡄⡐♃Ⅱ⹎⤯⎯⁐⑖❡ⱶ☠⺲ⶲ≋⦥⚩⾉⊢⭠ⲡ⩙ⲁ₟♟⠻❽⇕⹣⩸⎟‌⅞⇾⽻≫ⵔ⫅⌟⶜ⵓⓩ⣿ⵃⓊ⌊⫓⹃⥌⪭ⰺⁿ⟋⌀✈⃡ⱄ⌫⠮アァイィウヴエエオカガキギクグケゲコゴサザシジスズセゼソゾタチッヂツヅテデトドナニヌネノハバパヒビピフブプヘベペホボポマミムメモヤユヨラリルレロワヲンABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    const fontSize = 16;
+    const columns = canvas.width / fontSize;
+
+    const drops = Array(Math.floor(columns)).fill(1);
+
+    function draw() {
+        ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        ctx.fillStyle = "#0F0";
+        ctx.font = fontSize + "px monospace";
+
+        for (let i = 0; i < drops.length; i++) {
+            const text = letters.charAt(Math.floor(Math.random() * letters.length));
+            ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+
+            if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+                drops[i] = 0;
+            }
+            drops[i]++;
+        }
+    }
+
+    setInterval(draw, 33);
+
+    window.addEventListener("resize", () => {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    });
+
+    // Firebase Configuration
+    document.write('<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"><\/script>');
+    document.write('<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"><\/script>');
+    document.write('<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"><\/script>');
+
+    window.onload = function() {
+      if (typeof firebase !== 'undefined') {
+        // Firebase Configuration
+        const firebaseConfig = {
+          apiKey: "AIzaSyCnkMOrmlbXLrwrN4hlgfktij6gxhKXei8",
+          authDomain: "decode-me-4a832.firebaseapp.com",
+          projectId: "decode-me-4a832",
+          storageBucket: "decode-me-4a832.firebasestorage.app",
+          messagingSenderId: "1018708707971",
+          appId: "1:1018708707971:web:ce262b1e943194fba1a9b6"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // Format duration
+        function formatDuration(milliseconds) {
+          if (!milliseconds) return 'N/A';
+
+          const seconds = Math.floor(milliseconds / 1000);
+          const minutes = Math.floor(seconds / 60);
+          const hours = Math.floor(minutes / 60);
+
+          const remainingMinutes = minutes % 60;
+          const remainingSeconds = seconds % 60;
+
+          const formattedHours = hours > 0 ? `${hours}h ` : '';
+          const formattedMinutes = remainingMinutes > 0 ? `${remainingMinutes}m ` : '';
+          const formattedSeconds = `${remainingSeconds}s`;
+
+          return `${formattedHours}${formattedMinutes}${formattedSeconds}`;
+        }
+
+        // Calculate total time
+        function calculateTotalTime(levels) {
+          if (!levels) return null;
+
+          let totalTime = 0;
+
+          for (let i = 1; i <= 5; i++) {
+            if (levels[`level${i}`] && levels[`level${i}`].completedAt && levels[`level${i}`].startedAt) {
+              if (i === 1) {
+                totalTime += levels.level1.completedAt.toMillis() - levels.level1.startedAt.toMillis();
+              } else {
+                totalTime += levels[`level${i}`].completedAt.toMillis() - levels[`level${i-1}`].completedAt.toMillis();
+              }
+            }
+          }
+
+          return totalTime;
+        }
+
+        // Set leaderboard link
+        const leaderboardLink = document.getElementById("leaderboard-link");
+        if (location.hostname === "localhost" || location.hostname === "127.0.0.1") {
+          leaderboardLink.href = "leaderboard.html";
+        } else {
+          leaderboardLink.href = "./leaderboard";
+        }
+
+        // Display team information
+        auth.onAuthStateChanged(async (user) => {
+          if (user) {
+            try {
+              const teamDoc = await db.collection('teams').doc(user.uid).get();
+              if (teamDoc.exists) {
+                const teamData = teamDoc.data();
+                const teamInfo = document.getElementById('team-info');
+
+                // Calculate total time
+                const totalTime = calculateTotalTime(teamData.levels);
+
+                teamInfo.innerHTML = `
+                  <p><strong>Team:</strong> ${teamData.teamName}</p>
+                  <p><strong>Total Time:</strong> ${formatDuration(totalTime)}</p>
+                  <p style="margin-top: 10px; font-size: 14px; color: #0f0;">Your results have been added to the leaderboard!</p>
+                `;
+              }
+            } catch (error) {
+              console.error('Error getting team data:', error);
+            }
+          }
+        });
+      }
+    };
+</script>
+</body>
+</html>

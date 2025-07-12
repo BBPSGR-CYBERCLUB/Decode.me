@@ -4,7 +4,6 @@
     <meta charset="UTF-8" />
     <title>Level 4 Access</title>
     <link rel="shortcut icon" href="./images/logo.png" type="image/x-icon">
-
     <style>
 
         * {
@@ -15,7 +14,7 @@
 
         html, body {
             height: 100%;
-            font-family: Arial, sans-serif;
+            font-family: 'JetBrains Mono', sans-serif;
             overflow: hidden;
             background-color: #000;
         }
@@ -106,20 +105,6 @@
         }
     </style>
     <link href="https://fonts.googleapis.com/css2?family=Major+Mono+Display&display=swap" rel="stylesheet">
-    <script>
-        // Disable inspect tools
-        document.oncontextmenu = () => false;
-        document.onkeydown = (e) => {
-            if (
-                e.key === "F12" ||
-                (e.ctrlKey && e.shiftKey && ['I', 'J', 'C'].includes(e.key.toUpperCase())) ||
-                (e.ctrlKey && e.key.toLowerCase() === 'u')
-            ) {
-                e.preventDefault();
-                return false;
-            }
-        };
-    </script>
 </head>
 <body>
 <div class="flashbang"></div>
@@ -127,40 +112,98 @@
     <div class="left"></div>
     <div class="right">
         <h1>We are allowing you to go forward a level... click the button to continue</h1>
-        <button onclick="rickroll()">click here</button>\
-        <form class="hidden" onsubmit="checkPassword()">
-            <input type="text" name="pwd" id="pwd" autofocus>
+        <button onclick="redirect_sketchy_link()">click here</button>
+        <form class="hidden" onsubmit="event.preventDefault(); checkPassword();">
+            <label class="hidden" for="pwd">answer here</label>
+            <input type="text" name="pwd" id="pwd" autofocus
+                   onkeyup="event.preventDefault(); console.log(event); if(event.key === 'Enter') checkPassword()"
+                   placeholder="Enter Password" />
         </form>
     </div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <script>
+    // Firebase Configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyCnkMOrmlbXLrwrN4hlgfktij6gxhKXei8",
+      authDomain: "decode-me-4a832.firebaseapp.com",
+      projectId: "decode-me-4a832",
+      storageBucket: "decode-me-4a832.firebasestorage.app",
+      messagingSenderId: "1018708707971",
+      appId: "1:1018708707971:web:ce262b1e943194fba1a9b6"
+    };
+
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    // Check if user is authorized for this level
+    document.addEventListener('DOMContentLoaded', async () => {
+      auth.onAuthStateChanged(async (user) => {
+        if (user) {
+          try {
+            const teamDoc = await db.collection('teams').doc(user.uid).get();
+            if (teamDoc.exists) {
+              const teamData = teamDoc.data();
+              // Check if user has completed level 3
+              if (!teamData.levels || !teamData.levels.level3 || !teamData.levels.level3.completedAt) {
+                // User hasn't completed level 3, redirect to level 3
+                window.location.href = "level3.html";
+              } else {
+                // Record start time for level 4 if not already recorded
+                const levelRef = db.collection('teams').doc(user.uid);
+                await levelRef.update({
+                  'levels.level4.startedAt': firebase.firestore.FieldValue.serverTimestamp()
+                });
+              }
+            }
+          } catch (error) {
+            console.error('Error checking level authorization:', error);
+          }
+        } else {
+          // If not logged in, redirect to auth page
+          window.location.href = "auth.html";
+        }
+      });
+    });
+
     function checkPassword() {
-        const input = document.getElementById("pass").value;
-        const inputHash = CryptoJS.SHA512(input).toString(CryptoJS.enc.Hex);
+        const input = document.getElementById("pwd").value;
+        const inputHash = input;
         console.log(inputHash, input)
-        const correct = "34c6d3a69a967b8c120aba6caa1ac61814c72dc70145e67119bf5365a7e80d294cba34e0da583724e915d195d0052d39b1d16459592b848a170a4949353553d2";
+        const correct = "I have learnt my lesson, not to click on random links, but I still did it anyway. I am a fool, and I will never do it again. I promise.";
         if (inputHash == correct) {
-            if (location.hostname === "localhost" || location.hostname === "127.0.0.1") {
-                window.location.href = "level4.html";
+            // Record level completion time
+            const user = auth.currentUser;
+            if (user) {
+              db.collection('teams').doc(user.uid).update({
+                'levels.level4.completedAt': firebase.firestore.FieldValue.serverTimestamp()
+              }).then(() => {
+                // Navigate to next level
+                window.location.href = "level5.html";
+              }).catch(error => {
+                console.error('Error updating level completion time:', error);
+                // Navigate anyway in case of error
+                window.location.href = "level5.html";
+              });
             } else {
-                window.location.href = "level4.html";
+              // Navigate if not logged in
+              window.location.href = "level5.html";
             }
         } else {
             alert("Incorrect password. Try again.");
         }
     }
 
-    function rickroll(){
+    function redirect_sketchy_link(){
         window.location.replace("https://tinyurl.com/fakelink1234")
     }
-    onload((e) => {
-        e.preventDefault();
-        alert("lvl-4 is todo... goig to home...")
-        window.location.href = "./"
-    })
-
 </script>
 </body>
 </html>

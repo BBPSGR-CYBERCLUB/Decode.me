@@ -1,0 +1,27 @@
+// Firestore security rules
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Teams collection rules
+    match /teams/{teamId} {
+      // Allow read access to all authenticated users
+      allow read: if request.auth != null;
+
+      // Only allow write access to team's own document
+      allow write: if request.auth != null && request.auth.uid == teamId;
+
+      // Allow create for new team registrations
+      allow create: if request.auth != null && 
+                     request.auth.uid == teamId && 
+                     request.resource.data.teamName is string && 
+                     request.resource.data.email is string;
+    }
+  }
+}
+
+// Firebase Authentication rules
+service firebase.auth {
+  match /users/{userId} {
+    allow read, write: if request.auth != null && request.auth.uid == userId;
+  }
+}

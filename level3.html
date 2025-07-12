@@ -15,7 +15,7 @@
 
         html, body {
             height: 100%;
-            font-family: Arial, sans-serif;
+            font-family: 'JetBrains Mono', sans-serif;
             overflow: hidden;
             background-color: #000;
         }
@@ -131,18 +131,79 @@
     </div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <script>
+    // Firebase Configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyCnkMOrmlbXLrwrN4hlgfktij6gxhKXei8",
+      authDomain: "decode-me-4a832.firebaseapp.com",
+      projectId: "decode-me-4a832",
+      storageBucket: "decode-me-4a832.firebasestorage.app",
+      messagingSenderId: "1018708707971",
+      appId: "1:1018708707971:web:ce262b1e943194fba1a9b6"
+    };
+
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    // Check if user is authorized for this level
+    document.addEventListener('DOMContentLoaded', async () => {
+      auth.onAuthStateChanged(async (user) => {
+        if (user) {
+          try {
+            const teamDoc = await db.collection('teams').doc(user.uid).get();
+            if (teamDoc.exists) {
+              const teamData = teamDoc.data();
+              // Check if user has completed level 2
+              if (!teamData.levels || !teamData.levels.level2 || !teamData.levels.level2.completedAt) {
+                // User hasn't completed level 2, redirect to level 2
+                window.location.href = "level2.html";
+              } else {
+                // Record start time for level 3 if not already recorded
+                const levelRef = db.collection('teams').doc(user.uid);
+                await levelRef.update({
+                  'levels.level3.startedAt': firebase.firestore.FieldValue.serverTimestamp()
+                });
+              }
+            }
+          } catch (error) {
+            console.error('Error checking level authorization:', error);
+          }
+        } else {
+          // If not logged in, redirect to auth page
+          window.location.href = "auth.html";
+        }
+      });
+    });
+
     function checkPassword() {
         const input = document.getElementById("pass").value;
         const inputHash = CryptoJS.SHA512(input).toString(CryptoJS.enc.Hex);
         console.log(inputHash, input)
-        const correct = "b109f3bbbc244eb82441917ed06d618b9008dd09b3befd1b5e07394c706a8bb980b1d7785e5976ec049b46df5f1326af5a2ea6d103fd07c95385ffab0cacbc86";
+        const correct = "bd1bd37fd1fa4efadcbcc4382ca20624273b32122d22406e4da14c2f186620060661a84f4c4103969edb6369d87636da9c93643d3612b5ec9e796a1025ed462a";
         if (inputHash == correct) {
-            if (location.hostname === "localhost" || location.hostname === "127.0.0.1") {
+            // Record level completion time
+            const user = auth.currentUser;
+            if (user) {
+              db.collection('teams').doc(user.uid).update({
+                'levels.level3.completedAt': firebase.firestore.FieldValue.serverTimestamp()
+              }).then(() => {
+                // Navigate to next level
                 window.location.href = "level4.html";
+              }).catch(error => {
+                console.error('Error updating level completion time:', error);
+                // Navigate anyway in case of error
+                window.location.href = "level4.html";
+              });
             } else {
-                window.location.href = "level4.html";
+              // Navigate if not logged in
+              window.location.href = "level4.html";
             }
         } else {
             alert("Incorrect password. Try again.");

@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Leaderboard - Decrypt.me</title>
+  <link rel="shortcut icon" href="./images/logo.png" type="image/x-icon">
+  <link href="https://fonts.googleapis.com/css2?family=Major+Mono+Display&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap" rel="stylesheet">
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-family: 'JetBrains Mono', sans-serif;
+      overflow: hidden;
+      color: white;
+      background-color: black;
+    }
+
+    canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: -1;
+    }
+
+    .container {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 80%;
+      max-width: 800px;
+      background-color: rgba(0, 0, 0, 0.8);
+      padding: 30px;
+      border-radius: 10px;
+      backdrop-filter: blur(5px);
+      border: 1px solid rgba(0, 255, 0, 0.3);
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 30px;
+      font-family: 'Major Mono Display', monospace;
+      color: #0f0;
+    }
+
+    .table-container {
+      max-height: 500px;
+      overflow-y: auto;
+      margin-bottom: 20px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      padding: 12px 15px;
+      text-align: left;
+      border-bottom: 1px solid rgba(0, 255, 0, 0.3);
+    }
+
+    th {
+      background-color: rgba(0, 255, 0, 0.2);
+      color: #0f0;
+      font-weight: bold;
+    }
+
+    tr:hover {
+      background-color: rgba(0, 255, 0, 0.1);
+    }
+
+    .highlight {
+      background-color: rgba(0, 255, 0, 0.15);
+      font-weight: bold;
+    }
+
+    .level-indicator {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      margin-right: 5px;
+      vertical-align: middle;
+    }
+
+    .level-complete {
+      background-color: #0f0;
+    }
+
+    .level-incomplete {
+      background-color: #333;
+    }
+
+    .back-button {
+      display: block;
+      width: 200px;
+      margin: 0 auto;
+      padding: 12px;
+      background-color: rgba(0, 255, 0, 0.8);
+      color: black;
+      text-align: center;
+      text-decoration: none;
+      border-radius: 5px;
+      font-weight: bold;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .back-button:hover {
+      background-color: lime;
+    }
+
+    .last-updated {
+      text-align: center;
+      margin-top: 15px;
+      font-size: 12px;
+      color: #999;
+    }
+
+    .legend {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 20px;
+      gap: 20px;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="matrix"></canvas>
+
+  <div class="container">
+    <h1>LEADERBOARD</h1>
+
+    <div class="legend">
+      <div class="legend-item">
+        <span class="level-indicator level-complete"></span> Completed
+      </div>
+      <div class="legend-item">
+        <span class="level-indicator level-incomplete"></span> Not completed
+      </div>
+    </div>
+
+    <div class="table-container">
+      <table id="leaderboard">
+        <thead>
+          <tr>
+            <th>Rank</th>
+            <th>Team</th>
+            <th>Level 1</th>
+            <th>Level 2</th>
+            <th>Level 3</th>
+            <th>Level 4</th>
+            <th>Level 5</th>
+            <th>Total Time</th>
+          </tr>
+        </thead>
+        <tbody id="leaderboard-body">
+          <!-- Leaderboard entries will be inserted here dynamically -->
+          <tr>
+            <td colspan="8" style="text-align: center;">Loading leaderboard data...</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <a href="#" id="back-link" class="back-button">Back to Game</a>
+
+    <div class="last-updated" id="last-updated">Last updated: Loading...</div>
+  </div>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+  <script>
+    // Matrix background effect
+    const canvas = document.getElementById("matrix");
+    const ctx = canvas.getContext("2d");
+
+    canvas.height = window.innerHeight;
+    canvas.width = window.innerWidth;
+
+    const letters = "⪘⬡⠏⿱⦟⸐⡺⚯⇺␫≾▷✕⅃⍲ⅉ⟟⇄⬗⻁⎐⢜∧≇∪⩪↡⁏⣘ⰱ≀⠤⸓∠⊉⻳Ⓩ⳹⡄⡐♃Ⅱ⹎⤯⎯⁐⑖❡ⱶ☠⺲ⶲ≋⦥⚩⾉⊢⭠ⲡ⩙ⲁ₟♟⠻❽⇕⹣⩸⎟‌⅞⇾⽻≫ⵔ⫅⌟⶜ⵓⓩ⣿ⵃⓊ⌊⫓⹃⥌⪭ⰺⁿ⟋⌀✈⃡ⱄ⌫⠮アァイィウヴエエオカガキギクグケゲコゴサザシジスズセゼソゾタチッヂツヅテデトドナニヌネノハバパヒビピフブプヘベペホボポマミムメモヤユヨラリルレロワヲンABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    const fontSize = 16;
+    const columns = canvas.width / fontSize;
+
+    const drops = Array(Math.floor(columns)).fill(1);
+
+    function draw() {
+      ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      ctx.fillStyle = "#0F0";
+      ctx.font = fontSize + "px monospace";
+
+      for (let i = 0; i < drops.length; i++) {
+        const text = letters.charAt(Math.floor(Math.random() * letters.length));
+        ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+
+        if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+          drops[i] = 0;
+        }
+        drops[i]++;
+      }
+    }
+
+    setInterval(draw, 33);
+
+    window.addEventListener("resize", () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    });
+
+    // Firebase Configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyCnkMOrmlbXLrwrN4hlgfktij6gxhKXei8",
+      authDomain: "decode-me-4a832.firebaseapp.com",
+      projectId: "decode-me-4a832",
+      storageBucket: "decode-me-4a832.firebasestorage.app",
+      messagingSenderId: "1018708707971",
+      appId: "1:1018708707971:web:ce262b1e943194fba1a9b6"
+    };
+
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    // DOM elements
+    const leaderboardBody = document.getElementById('leaderboard-body');
+    const lastUpdatedEl = document.getElementById('last-updated');
+    const backLink = document.getElementById('back-link');
+
+    // Format duration (milliseconds to readable format)
+    function formatDuration(milliseconds) {
+      if (!milliseconds) return 'N/A';
+
+      const seconds = Math.floor(milliseconds / 1000);
+      const minutes = Math.floor(seconds / 60);
+      const hours = Math.floor(minutes / 60);
+
+      const remainingMinutes = minutes % 60;
+      const remainingSeconds = seconds % 60;
+
+      const formattedHours = hours > 0 ? `${hours}h ` : '';
+      const formattedMinutes = remainingMinutes > 0 ? `${remainingMinutes}m ` : '';
+      const formattedSeconds = `${remainingSeconds}s`;
+
+      return `${formattedHours}${formattedMinutes}${formattedSeconds}`;
+    }
+
+    // Calculate team's total time
+    function calculateTotalTime(levels) {
+      if (!levels) return null;
+
+      let totalTime = 0;
+      let highestLevelCompleted = 0;
+
+      for (let i = 1; i <= 5; i++) {
+        if (levels[`level${i}`] && levels[`level${i}`].completedAt) {
+          highestLevelCompleted = i;
+
+          if (i === 1) {
+            // For level 1, calculate from registration time
+            totalTime += levels.level1.completedAt.toMillis() - levels.level1.startedAt.toMillis();
+          } else {
+            // For subsequent levels, calculate from previous level completion
+            totalTime += levels[`level${i}`].completedAt.toMillis() - levels[`level${i-1}`].completedAt.toMillis();
+          }
+        }
+      }
+
+      return { totalTime, highestLevelCompleted };
+    }
+
+    // Generate level indicator
+    function createLevelIndicator(level, levels) {
+      const isCompleted = levels && 
+                         levels[`level${level}`] && 
+                         levels[`level${level}`].completedAt;
+
+      const indicator = document.createElement('span');
+      indicator.className = `level-indicator ${isCompleted ? 'level-complete' : 'level-incomplete'}`;
+
+      const timeSpan = document.createElement('span');
+      if (isCompleted) {
+        const startTime = levels[`level${level}`].startedAt;
+        const completedTime = levels[`level${level}`].completedAt;
+        const duration = completedTime.toMillis() - startTime.toMillis();
+        timeSpan.textContent = formatDuration(duration);
+      } else {
+        timeSpan.textContent = '-';
+      }
+
+      const container = document.createElement('div');
+      container.appendChild(indicator);
+      container.appendChild(timeSpan);
+
+      return container;
+    }
+
+    // Fetch and display leaderboard data
+    async function fetchLeaderboardData() {
+      try {
+        leaderboardBody.innerHTML = '<tr><td colspan="8" style="text-align: center;">Loading leaderboard data...</td></tr>';
+
+        const teamsSnapshot = await db.collection('teams').get();
+        const teamsData = [];
+        let currentUserTeamId = null;
+
+        // Get current user if logged in
+        const currentUser = auth.currentUser;
+        if (currentUser) {
+          currentUserTeamId = currentUser.uid;
+        }
+
+        // Process teams data
+        teamsSnapshot.forEach(doc => {
+          const teamData = doc.data();
+          const { totalTime, highestLevelCompleted } = calculateTotalTime(teamData.levels);
+
+          teamsData.push({
+            id: doc.id,
+            teamName: teamData.teamName,
+            levels: teamData.levels || {},
+            totalTime: totalTime || Infinity,
+            highestLevelCompleted: highestLevelCompleted || 0,
+            isCurrentUser: doc.id === currentUserTeamId
+          });
+        });
+
+        // Sort teams by highest level completed, then by total time
+        teamsData.sort((a, b) => {
+          // First, sort by highest level completed (descending)
+          if (b.highestLevelCompleted !== a.highestLevelCompleted) {
+            return b.highestLevelCompleted - a.highestLevelCompleted;
+          }
+
+          // Then sort by total time (ascending)
+          if (a.totalTime === Infinity) return 1;
+          if (b.totalTime === Infinity) return -1;
+          return a.totalTime - b.totalTime;
+        });
+
+        // Clear and fill the leaderboard
+        leaderboardBody.innerHTML = '';
+
+        if (teamsData.length === 0) {
+          leaderboardBody.innerHTML = '<tr><td colspan="8" style="text-align: center;">No teams found</td></tr>';
+          return;
+        }
+
+        teamsData.forEach((team, index) => {
+          const row = document.createElement('tr');
+          if (team.isCurrentUser) {
+            row.className = 'highlight';
+          }
+
+          // Rank
+          const rankCell = document.createElement('td');
+          rankCell.textContent = index + 1;
+          row.appendChild(rankCell);
+
+          // Team Name
+          const nameCell = document.createElement('td');
+          nameCell.textContent = team.teamName;
+          row.appendChild(nameCell);
+
+          // Level indicators and times
+          for (let i = 1; i <= 5; i++) {
+            const levelCell = document.createElement('td');
+            levelCell.appendChild(createLevelIndicator(i, team.levels));
+            row.appendChild(levelCell);
+          }
+
+          // Total Time
+          const timeCell = document.createElement('td');
+          timeCell.textContent = team.totalTime !== Infinity ? formatDuration(team.totalTime) : '-';
+          row.appendChild(timeCell);
+
+          leaderboardBody.appendChild(row);
+        });
+
+        // Update last updated time
+        lastUpdatedEl.textContent = `Last updated: ${new Date().toLocaleString()}`;
+
+      } catch (error) {
+        console.error('Error fetching leaderboard data:', error);
+        leaderboardBody.innerHTML = `<tr><td colspan="8" style="text-align: center;">Error loading leaderboard: ${error.message}</td></tr>`;
+      }
+    }
+
+    // Set back link
+    backLink.href = "index.html";
+
+    // Initial load of leaderboard data
+    fetchLeaderboardData();
+
+    // Auto-refresh the leaderboard every minute
+    setInterval(fetchLeaderboardData, 60000);
+
+    // Check auth state and adjust back link if needed
+    auth.onAuthStateChanged(async (user) => {
+      if (user) {
+        // User is logged in - get their current level
+        try {
+          const teamDoc = await db.collection('teams').doc(user.uid).get();
+          if (teamDoc.exists) {
+            const teamData = teamDoc.data();
+            let highestLevel = 1;
+
+            // Find highest completed level
+            for (let i = 5; i >= 1; i--) {
+              if (teamData.levels && teamData.levels[`level${i}`] && teamData.levels[`level${i}`].completedAt) {
+                highestLevel = i + 1;
+                if (highestLevel > 5) highestLevel = 5; // Max is level 5
+                break;
+              }
+            }
+
+            // Set back link to highest available level
+            backLink.href = `level${highestLevel}.html`;
+          }
+        } catch (error) {
+          console.error('Error getting user level:', error);
+        }
+      }
+    });
+  </script>
+</body>
+</html>
