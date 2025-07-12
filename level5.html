@@ -209,8 +209,22 @@
         }
     }
 
+    let tries = 0
+
     function download_decrypt_file(){
-        window.location.href = "level3/decrypt.py";
+        if (tries === 0){
+            window.location.href = "level5/decode.py"
+        }
+        else if (tries === 1){
+            window.location.href = "level5/translate.py"
+        }
+        else if (tries <= 5){
+            alert("You have already downloaded the files. Please try to solve the riddle without downloading them again.");
+        }
+        else {
+            alert("You are determined... have you tried the decrypt.py file? It might help you understand the riddle better...");
+        }
+        tries ++
     }
 </script>
 </body>
