@@ -113,6 +113,7 @@
     <div class="right">
         <h1>We are allowing you to go forward a level... click the button to continue</h1>
         <button onclick="redirect_sketchy_link()">click here</button>
+        <button id="hint-btn" style="margin-top: 10px; background-color: rgba(255, 255, 255, 0.3);">Need a hint?</button>
         <form class="hidden" onsubmit="event.preventDefault(); checkPassword();">
             <label class="hidden" for="pwd">answer here</label>
             <input type="text" name="pwd" id="pwd" autofocus
@@ -126,6 +127,8 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<!-- Hint System -->
+<script src="js/hints.js"></script>
 
 <script>
     // Firebase Configuration
@@ -204,6 +207,13 @@
     function redirect_sketchy_link(){
         window.location.replace("https://tinyurl.com/fakelink1234")
     }
+
+    // Hint button functionality
+    let hintIndex = 0;
+    document.getElementById('hint-btn').addEventListener('click', () => {
+      window.hintSystem.showHint(hintIndex);
+      hintIndex = (hintIndex + 1) % 1; // Cycle through 4 hints
+    });
 </script>
 </body>
 </html>

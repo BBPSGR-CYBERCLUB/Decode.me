@@ -1,8 +1,10 @@
 import wave
 import numpy as np
 
+
 def text_to_bits(text):
     return ''.join(format(byte, '08b') for byte in text.encode('utf-8'))
+
 
 def hide_data(audio_in, text_file, audio_out):
     # Read message
@@ -58,7 +60,8 @@ def hide_data(audio_in, text_file, audio_out):
         wav_out.setparams(params)
         wav_out.writeframes(encoded_samples.astype(np.int16).tobytes())
 
-    print(f"Message successfully hidden in '{audio_out}' using {['mono','stereo'][n_channels==2]} mode.")
+    print(f"Message successfully hidden in '{audio_out}' using {['mono', 'stereo'][n_channels == 2]} mode.")
+
 
 # Usage
 hide_data('cover.wav', 'riddle.txt', 'stego.wav')

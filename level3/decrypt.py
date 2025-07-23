@@ -7,23 +7,31 @@ def extract_data(audio_file):
         n_channels, sampwidth, framerate, n_frames = params[:4]
         audio_data = wav.readframes(n_frames)
 
-    if sampwidth != 2:
-        raise ValueError("Only 16-bit PCM WAV files are supported.")
+    print(f"Channels: {n_channels}, Sample Width: {sampwidth * 8} bits, Frame Rate: {framerate}, Total Frames: {n_frames}")
 
-    samples = np.frombuffer(audio_data, dtype=np.int16)
+    if sampwidth == 1:
+        # 8-bit WAVs are unsigned, so we shift them to center around 0
+        samples = np.frombuffer(audio_data, dtype=np.uint8)
+        samples = samples.astype(np.int16) - 128  # Convert to signed for LSB extraction
+    elif sampwidth == 2:
+        # 16-bit WAVs are signed
+        samples = np.frombuffer(audio_data, dtype=np.int16)
+    else:
+        raise ValueError("Only 8-bit and 16-bit PCM WAV files are supported. This ain't no audiophile club.")
 
     # Handle stereo
     if n_channels == 2:
         samples = samples.reshape((-1, 2))
-        target_channel = 0  # Extract from left channel
+        target_channel = 0  # Left ear gang
         samples = samples[:, target_channel]
 
+    # Extract LSBs
     bits = [str(sample & 1) for sample in samples]
 
-    # Convert bits to bytes
+    # Group into bytes
     byte_chunks = [''.join(bits[i:i+8]) for i in range(0, len(bits), 8)]
 
-    # Find delimiter (11111111 11111110)
+    # Define end-of-message delimiter (yes, like Morse code for nerds)
     delimiter = ['11111111', '11111110']
     message_bytes = []
     for i in range(len(byte_chunks) - 1):
@@ -32,15 +40,16 @@ def extract_data(audio_file):
         try:
             message_bytes.append(int(byte_chunks[i], 2))
         except ValueError:
-            break  # Random garbage at the end? Yeet.
+            print("Non-binary garbage in the data. Smells like corruption or wrong format.")
+            break
 
-    # Convert to string
+    # Decode the bytes into a string, with backup if UTF-8 dies
     try:
         message = bytes(message_bytes).decode('utf-8')
     except UnicodeDecodeError:
         message = bytes(message_bytes).decode('utf-8', errors='replace')
 
-    print("Recovered message:")
+    print("\nRecovered message:")
     print(message)
 
 # Usage

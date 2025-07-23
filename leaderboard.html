@@ -146,6 +146,9 @@
       <div class="legend-item">
         <span class="level-indicator level-incomplete"></span> Not completed
       </div>
+      <div class="legend-item" style="color: #ff9900;">
+        <i>10 points per level, -1 per hint used</i>
+      </div>
     </div>
 
     <div class="table-container">
@@ -159,6 +162,7 @@
             <th>Level 3</th>
             <th>Level 4</th>
             <th>Level 5</th>
+            <th>Points</th>
             <th>Total Time</th>
           </tr>
         </thead>
@@ -258,12 +262,13 @@
       return `${formattedHours}${formattedMinutes}${formattedSeconds}`;
     }
 
-    // Calculate team's total time
+    // Calculate team's total time and points
     function calculateTotalTime(levels) {
       if (!levels) return null;
 
       let totalTime = 0;
       let highestLevelCompleted = 0;
+      let totalPoints = 0;
 
       for (let i = 1; i <= 5; i++) {
         if (levels[`level${i}`] && levels[`level${i}`].completedAt) {
@@ -276,10 +281,15 @@
             // For subsequent levels, calculate from previous level completion
             totalTime += levels[`level${i}`].completedAt.toMillis() - levels[`level${i-1}`].completedAt.toMillis();
           }
+
+          // Calculate points for this level (10 points per level, minus 1 per hint used)
+          const hintsUsed = levels[`level${i}`].hintsUsed || 0;
+          const levelPoints = Math.max(10 - hintsUsed, 0); // Minimum 0 points
+          totalPoints += levelPoints;
         }
       }
 
-      return { totalTime, highestLevelCompleted };
+      return { totalTime, highestLevelCompleted, totalPoints };
     }
 
     // Generate level indicator
@@ -296,7 +306,18 @@
         const startTime = levels[`level${level}`].startedAt;
         const completedTime = levels[`level${level}`].completedAt;
         const duration = completedTime.toMillis() - startTime.toMillis();
-        timeSpan.textContent = formatDuration(duration);
+
+        // Get hints used for this level
+        const hintsUsed = levels[`level${level}`].hintsUsed || 0;
+        const levelPoints = Math.max(10 - hintsUsed, 0);
+
+        // Display time with hints info
+        timeSpan.textContent = `${formatDuration(duration)} | ${levelPoints} pts`;
+        if (hintsUsed > 0) {
+          timeSpan.title = `Used ${hintsUsed} hint${hintsUsed > 1 ? 's' : ''}`;
+          timeSpan.style.textDecoration = 'underline';
+          timeSpan.style.textDecorationStyle = 'dotted';
+        }
       } else {
         timeSpan.textContent = '-';
       }
@@ -381,6 +402,11 @@
             levelCell.appendChild(createLevelIndicator(i, team.levels));
             row.appendChild(levelCell);
           }
+
+          // Add points
+          const pointsCell = document.createElement('td');
+          pointsCell.textContent = team.totalPoints || 0;
+          row.appendChild(pointsCell);
 
           // Total Time
           const timeCell = document.createElement('td');

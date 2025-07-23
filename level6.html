@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Level 6 Access</title>
+    <link rel="shortcut icon" href="./images/logo.png" type="image/x-icon">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%;
+            font-family: 'JetBrains Mono', monospace;
+            overflow: hidden;
+            background-color: #000;
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+        }
+
+        .left {
+            flex: 1;
+            background: url("images/lvl2.png") no-repeat center center;
+            background-size: cover;
+        }
+
+        .right {
+            flex: 1;
+            background-color: #111;
+            color: #0ff;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+        }
+
+        h1 {
+            font-family: 'Major Mono Display', monospace;
+            margin-bottom: 20px;
+            color: #0ff;
+        }
+
+        .instructions {
+            font-size: 14px;
+            margin-bottom: 30px;
+            text-align: center;
+            color: #aaa;
+            max-width: 400px;
+        }
+
+        input[type="text"] {
+            padding: 10px;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            outline: none;
+            width: 280px;
+            text-align: center;
+        }
+
+        button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #0ff;
+            color: #000;
+            border: none;
+            border-radius: 5px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #6ff;
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Major+Mono+Display&display=swap" rel="stylesheet">
+    <script>
+        document.oncontextmenu = () => false;
+        document.onkeydown = (e) => {
+            if (
+                e.key === "F12" ||
+                (e.ctrlKey && e.shiftKey && ['I', 'J', 'C'].includes(e.key.toUpperCase())) ||
+                (e.ctrlKey && e.key.toLowerCase() === 'u')
+            ) {
+                e.preventDefault();
+                return false;
+            }
+        };
+    </script>
+</head>
+<body>
+<div class="container">
+    <div class="left"></div>
+    <div class="right">
+        <h1>Where Are You?</h1>
+        <p class="instructions">
+            GeoGuesser + RSA-e
+        </p>
+        <input type="text" id="locationGuess" placeholder="where are you." />
+        <button onclick="checkGuess()">Submit</button>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<script>
+    // Firebase Config
+    const firebaseConfig = {
+        apiKey: "AIzaSyCnkMOrmlbXLrwrN4hlgfktij6gxhKXei8",
+        authDomain: "decode-me-4a832.firebaseapp.com",
+        projectId: "decode-me-4a832",
+        storageBucket: "decode-me-4a832.firebasestorage.app",
+        messagingSenderId: "1018708707971",
+        appId: "1:1018708707971:web:ce262b1e943194fba1a9b6"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    document.addEventListener('DOMContentLoaded', () => {
+        auth.onAuthStateChanged(async (user) => {
+            if (user) {
+                try {
+                    await db.collection("teams").doc(user.uid).update({
+                        "levels.level6.startedAt": firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                } catch (e) {
+                    console.error("Error in level access:", e);
+                }
+            } else {
+                window.location.href = "auth.html";
+            }
+        });
+    });
+
+    function checkGuess() {
+        const input = document.getElementById("locationGuess").value.trim();
+
+        function getLocation() {
+            return new Promise((resolve, reject) => {
+                if ("geolocation" in navigator) {
+                    navigator.geolocation.getCurrentPosition(
+                        position => {
+                            const lat = position.coords.latitude.toFixed(0) + 65537;
+                            const long = position.coords.longitude.toFixed(0) + 65537;
+                            const coordString = `(${lat}, ${long})`;
+                            resolve(coordString);
+                        },
+                        error => {
+                            console.error(error);
+                            reject("Couldn't fetch your location. Maybe your browser said 'nah'?");
+                        }
+                    );
+                } else {
+                    reject("😒 Geolocation isn't supported on this crusty browser.");
+                }
+            });
+        }
+
+        getLocation().then(coordString => {
+            console.log(coordString);
+            console.log(input, coordString)
+            if (input == coordString) {
+                const user = auth.currentUser;
+                if (user) {
+                    db.collection("teams").doc(user.uid).update({
+                        "levels.level6.completedAt": firebase.firestore.FieldValue.serverTimestamp()
+                    }).then(() => {
+                        window.location.href = "winner.html";
+                    }).catch(() => {
+                        window.location.href = "winner.html";
+                    });
+                } else {
+                    window.location.href = "winner.html";
+                }
+            } else {
+                alert("Nah fam, not even close. Try again 👀");
+            }
+        }).catch(error => {
+            alert(error);
+            throw new Error("Location fetch failed");
+        })
+
+
+
+    }
+</script>
+</body>
+</html>

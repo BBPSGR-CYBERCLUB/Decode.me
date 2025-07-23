@@ -124,7 +124,8 @@
     <div class="right">
         <h1>Solve the riddle.</h1>
         <audio src="level3/stego.wav" controls></audio>
-        <i style="margin-bottom: 20px;"><button onclick="download_decrypt_file()">hint</button></i>
+        <i style="margin-bottom: 20px;"><button onclick="download_decrypt_file()">Download File</button></i>
+        <button id="hint-btn" style="margin-bottom: 20px; background-color: rgba(255, 255, 255, 0.3);">Need a hint?</button>
         <label for="pass" style="display: none">enter pwd</label> <!-- Label is hidden for accessibility, but not visible to users -->
         <input type="password" id="pass" placeholder="Password" />
         <button onclick="checkPassword()">Enter</button>
@@ -135,6 +136,8 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<!-- Hint System -->
+<script src="js/hints.js"></script>
 
 <script>
     // Firebase Configuration
@@ -186,7 +189,7 @@
         const input = document.getElementById("pass").value;
         const inputHash = CryptoJS.SHA512(input).toString(CryptoJS.enc.Hex);
         console.log(inputHash, input)
-        const correct = "bd1bd37fd1fa4efadcbcc4382ca20624273b32122d22406e4da14c2f186620060661a84f4c4103969edb6369d87636da9c93643d3612b5ec9e796a1025ed462a";
+        const correct = "106a11fc4189c6d6597ceb64f83ef4b0260e53058c3ee0c7b8657ca8ab72f0e9e0b3c1a87a9e2af9892d946ae4f3e36ea997df7dd6ae9553041c41674f855cb5";
         if (inputHash == correct) {
             // Record level completion time
             const user = auth.currentUser;
@@ -211,8 +214,15 @@
     }
 
     function download_decrypt_file(){
-        window.location.href = "level3/decrypt.py";
+        window.hintSystem.handleFileDownloadHint("level3/decrypt.py");
     }
+
+    // Hint button functionality
+    let hintIndex = 0;
+    document.getElementById('hint-btn').addEventListener('click', () => {
+      window.hintSystem.showHint(hintIndex);
+      hintIndex = (hintIndex + 1) % 3; // Cycle through 4 hints
+    });
 </script>
 </body>
 </html>

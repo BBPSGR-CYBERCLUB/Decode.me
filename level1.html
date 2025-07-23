@@ -162,7 +162,21 @@
             await levelRef.update({
               'levels.level1.startedAt': firebase.firestore.FieldValue.serverTimestamp()
             });
+          } else{
+            db.collection('teams').doc(user.uid).set({
+              levels: {
+                level1: {
+                  startedAt: firebase.firestore.FieldValue.serverTimestamp()
+                }
+              }
+            }
+            ).then(() => {
+              console.log('Level start time recorded successfully.');
+            }).catch(error => {
+              console.error('Error recording level start time:', error);
+            });
           }
+
         } catch (error) {
           console.error('Error updating level start time:', error);
         }

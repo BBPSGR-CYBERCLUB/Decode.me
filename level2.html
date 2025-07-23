@@ -123,11 +123,11 @@
   <div class="left"></div>
   <div class="right">
     <h1>Enter Password</h1>
-    <h2>m/sjfYw5+QEFub7hDHiTYg==</h2>
-    <i style="margin-bottom: 20px;">Hint: AES256</i>
+    <h2>HVx4YQeKnvuvMAuYUwpdBks+DTNQt5+GdfT2yZIu8fxl68kkulxM2Ij7mFUV68On</h2>
     <label for="pass" style="display: none">enter pwd</label> <!-- Label is hidden for accessibility, but not visible to users -->
     <input type="password" id="pass" placeholder="Password" />
     <button onclick="checkPassword()">Enter</button>
+    <button id="hint-btn" style="margin-top: 10px; background-color: rgba(255, 255, 255, 0.3);">Need a hint?</button>
   </div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
@@ -135,6 +135,8 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<!-- Hint System -->
+<script src="js/hints.js"></script>
 
 <script>
   // Firebase Configuration
@@ -194,15 +196,15 @@
     const input = document.getElementById("pass").value;
     const inputHash = CryptoJS.SHA512(input).toString(CryptoJS.enc.Hex);
     console.log(inputHash, input)
-    const correct = "34c6d3a69a967b8c120aba6caa1ac61814c72dc70145e67119bf5365a7e80d294cba34e0da583724e915d195d0052d39b1d16459592b848a170a4949353553d2";
-    if (inputHash == correct) {
+    const correct = "c9032cf0c781418363975612d85a0d066fb8ba22a0df60d42ce38fe81694b0d2e7010998a1a9c6adb442bc374e27a4a1d168212fa82953a41359efb81a12eee8";
+    if (inputHash.toString() === correct) {
       // Record level completion time
       const user = auth.currentUser;
       if (user) {
         db.collection('teams').doc(user.uid).update({
           'levels.level2.completedAt': firebase.firestore.FieldValue.serverTimestamp()
         }).then(() => {
-          // Navigate to next level
+          // Navigate to the next level
           if (location.hostname === "localhost" || location.hostname === "127.0.0.1") {
             window.location.href = "level3.html";
           } else {
@@ -220,15 +222,22 @@
       } else {
         // Navigate if not logged in
         if (location.hostname === "localhost" || location.hostname === "127.0.0.1") {
-          window.location.href = "level3.html";
+          window.location.href = "auth.html";
         } else {
-          window.location.href = "./level3";
+          window.location.href = "./auth";
         }
       }
     } else {
       alert("Incorrect password. Try again.");
     }
   }
+
+  // Hint button functionality
+  let hintIndex = 0;
+  document.getElementById('hint-btn').addEventListener('click', () => {
+    window.hintSystem.showHint(hintIndex);
+    hintIndex = (hintIndex + 1) % 4; // Cycle through 4 hints
+  });
 </script>
 </body>
 </html>
