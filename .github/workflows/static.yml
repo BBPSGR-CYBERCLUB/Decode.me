@@ -5,9 +5,6 @@ on:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
-  # Runs every day at midnight IST (which is 18:30 UTC)
-  schedule:
-    - cron: "30 18 * * *"  # Midnight IST
 
 permissions:
   contents: read
